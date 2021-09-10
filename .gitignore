@@ -35,3 +35,9 @@ parsed/*
 attribution/gitminer/out_code/*
 attribution/gitminer/out/*
 attribution/gitminer/data/exploded/*
+
+*.pyc
+attribution/pathminer/bin/*
+*.prefs
+.project
+.classpath

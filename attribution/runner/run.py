@@ -58,7 +58,7 @@ def run():
         repo_processor.explode_repo()
 
     os.chdir(".")
-    subprocess.run(["java", "-jar", "../pathminer/extract-path-contexts.jar"])
+    subprocess.run(["java", "-jar", "../pathminer/extract-path-contexts.jar", "all"])
 
     # At this point all necessary data should be in gitminer/out
 
