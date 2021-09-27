@@ -1,3 +1,11 @@
+'''
+涉及数据：
+file_changes_{i}.csv
+resolved_entities.csv
+目标：
+滤除method delete、modify的code change
+并统计author_id、commit_id的频率情况
+'''
 import os
 import pickle
 from argparse import ArgumentParser
@@ -22,25 +30,25 @@ def compute_occurrences(processed_folder: ProcessedFolder) -> Tuple[Counter, Cou
         return author_occurrences, change_occurrences, author_to_changes, total_count
 
     print("Computing occurrences for changes and authors")
-    resolved_entities = resolve_entities(processed_folder)
+    resolved_entities = resolve_entities(processed_folder) # 每行都是 (原author id, 修正后的author id)
     author_occurrences = Counter()
     change_occurrences = Counter()
     author_to_changes = {}
     total_count = 0
 
-    for change_file in processed_folder.file_changes:
+    for change_file in processed_folder.file_changes: # change_file每行都是一个commit解析后的内容，记录了function的增删改
         change_ids = pd.read_csv(change_file, usecols=["changeId", "pathsCountBefore", "pathsCountAfter"])
         for ind, row in change_ids.iterrows():
             if row['pathsCountBefore'] > 0 or row['pathsCountAfter'] == 0:
                 continue
 
-            author = resolved_entities.loc[row['changeId']]
-            author_occurrences[author] += 1
-            change_occurrences[row['changeId']] += 1
+            author = resolved_entities.loc[row['changeId']] # 得到修正后的author id
+            author_occurrences[author] += 1 # 作者的出现次数
+            change_occurrences[row['changeId']] += 1 # 某次commit包含的function creation的数量
 
             if author not in author_to_changes:
                 author_to_changes[author] = []
-            author_to_changes[author].append(total_count)
+            author_to_changes[author].append(total_count) # 记录该作者在file_change中出现的位置
             total_count += 1
 
     for i, (author, count) in enumerate(author_occurrences.most_common()):

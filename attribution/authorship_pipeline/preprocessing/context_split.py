@@ -262,8 +262,9 @@ def _filter_authors(splits: List[ContextSplit], min_count: int, max_count: int, 
 
 def context_split(processed_folder: ProcessedFolder, min_count: int = 100, max_count: int = 10 ** 9,
                   min_train: float = 0.7, max_train: float = 0.8) -> List[ContextSplit]:
+    # 作者以及commit对应的频次
     author_occurrences, change_occurrences, author_to_changes, total_count = compute_occurrences(processed_folder)
-    change_entities = resolve_entities(processed_folder)
+    change_entities = resolve_entities(processed_folder) # 所有的作者
 
     if os.path.exists(processed_folder.context_split(min_train, max_train)):
         print("Loading context-split data")
@@ -275,15 +276,15 @@ def context_split(processed_folder: ProcessedFolder, min_count: int = 100, max_c
     change_metadata = pd.read_csv(
         processed_folder.change_metadata_file,
         index_col="id",
-        usecols=["id", "newPath"],
+        usecols=["id", "newPath"], # metadata_file中的id就是change_id
         squeeze=True
-    )
+    ) # 得到文件名和目录，以change_id作为唯一索引
 
     project_root = _build_tree(
         change_metadata, change_entities, change_occurrences, lambda change_id: change_occurrences[change_id] > 0
-    )
+    ) # 构建目录树，并计算depth
 
-    depth = _max_depth(project_root)
+    depth = _max_depth(project_root) # project_root是树的根节点
 
     nodes_at_depth = [[] for _ in range(depth + 1)]
     _get_all_nodes_at_depth(project_root, nodes_at_depth)
