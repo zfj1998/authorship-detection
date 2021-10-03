@@ -1,6 +1,6 @@
 batch_size: 1024
 classifier_type: nn
-epochs: 5
+epochs: 20
 hidden_dim: 32
 learning_rate: 0.01
 log_batches: 10
