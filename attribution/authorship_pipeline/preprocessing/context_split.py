@@ -255,6 +255,7 @@ def _filter_authors(splits: List[ContextSplit], min_count: int, max_count: int, 
         for change_id in splits[i].change_to_pick_type:
             if not (min_count <= author_occurrences[change_entities[change_id]] <= max_count):
                 splits[i].change_to_pick_type[change_id] = PickType.IGNORED
+            else:
                 taken_changes += 1
                 taken_items += change_occurrences[change_id]
     print(f"{taken_changes} changes left, total of {taken_items} points")
@@ -262,7 +263,7 @@ def _filter_authors(splits: List[ContextSplit], min_count: int, max_count: int, 
 
 def context_split(processed_folder: ProcessedFolder, min_count: int = 100, max_count: int = 10 ** 9,
                   min_train: float = 0.7, max_train: float = 0.8) -> List[ContextSplit]:
-    # 作者以及commit对应的频次
+    # 作者以及commit对应的频次,change就代指commit
     author_occurrences, change_occurrences, author_to_changes, total_count = compute_occurrences(processed_folder)
     change_entities = resolve_entities(processed_folder) # 所有的作者
 

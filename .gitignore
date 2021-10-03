@@ -42,3 +42,4 @@ attribution/pathminer/bin/*
 *.prefs
 .project
 .classpath
+*.log

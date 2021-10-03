@@ -8,20 +8,30 @@ from preprocessing.context_split import context_split
 from preprocessing.merge_aliases_bipartite import merge_aliases_bipartite
 from preprocessing.time_split import time_split
 from util import ProcessedFolder
+import ipdb
+import json
 
 
 def fix_seed(seed: int):
     np.random.seed(seed)
 
+def dump_json_split_result(result):
+    for i in range(len(result)):
+        for j in result[i][1].keys():
+            result[i][1][j] = result[i][1][j].value
+    with open('split_result.json', 'w', encoding='utf-8') as f:
+        json.dump(result, f, ensure_ascii=False)
+
 
 def process_folder(project_folder: ProcessedFolder, n_time_buckets: int, min_context_train: float,
                    max_context_train: float, min_count: int, max_count: int, interactive: bool):
-    merge_aliases_bipartite(project_folder, interactive)
-    compute_occurrences(project_folder)
-    time_split(project_folder, n_time_buckets, uniform_distribution=True)
-    context_split(project_folder, min_train=min_context_train, max_train=max_context_train, min_count=min_count,
+    # merge_aliases_bipartite(project_folder, interactive)
+    # compute_occurrences(project_folder)
+    # time_split(project_folder, n_time_buckets, uniform_distribution=True)
+    result = context_split(project_folder, min_train=min_context_train, max_train=max_context_train, min_count=min_count,
                   max_count=max_count)
-    compute_caliskan_features(project_folder)
+    dump_json_split_result(result)
+    # compute_caliskan_features(project_folder)
 
 
 def run_preprocessing(n_time_buckets: int, min_context_train: float, max_context_train: float, min_count: int,

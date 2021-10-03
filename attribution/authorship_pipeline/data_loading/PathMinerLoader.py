@@ -6,7 +6,7 @@ import pandas as pd
 from data_loading.UtilityEntities import PathContext, Path, NodeType, PathContexts
 from preprocessing.context_split import ContextSplit, PickType
 from util import ProcessedFolder
-
+import ipdb
 
 class PathMinerLoader:
     """
@@ -56,20 +56,29 @@ class PathMinerLoader:
                                   change_to_time_bucket: Dict, min_max_count: Tuple[int, int],
                                   context_splits: List[ContextSplit], author_occurrences: Counter) \
             -> Tuple[np.ndarray, PathContexts, np.ndarray, List[np.ndarray]]:
-
+        '''
+        path_contexts_files: ["file_changes_0.csv",...]
+        change_entities: {change_id: auther_id, ...} len(change_id): 94962 len(auther_id): 654
+        change_to_time_bucket: 
+        min_max_count: (1e2, 1e9)
+        context_splits: [(depth, {change_id: picktype}),...]
+        author_occurrences: {auther_id: count_int} len: 433
+        '''
         starts, paths, ends = [], [], []
         labels = []
         time_buckets = []
         if context_splits is not None:
-            context_indices = [[] for _ in range(len(context_splits))]
+            # 为每个depth创建一个空列表
+            context_indices = [[] for _ in range(len(context_splits))] # len(context_splits) = depths # 10
         else:
             context_indices = None
 
         for path_contexts_file in path_contexts_files:
             contexts = pd.read_csv(path_contexts_file, sep=',',
                                    usecols=['changeId', 'pathsCountBefore', 'pathsCountAfter', 'pathsAfter'])
-            # Work only with method creations
+            # 🚩仅保留creation的change_id，这一步的筛选在其它文件中做过无数次了，唉
             contexts = contexts[np.logical_and(contexts['pathsCountBefore'] == 0, contexts['pathsCountAfter'] > 0)]
+            # 把paths的";"分开，成为许多个path组成的列表
             path_contexts = contexts['pathsAfter'].fillna('').map(
                 lambda ctx: np.array(list(map(PathContext.fromstring, ctx.split(';'))), dtype=np.object)
                 if ctx
@@ -87,7 +96,7 @@ class PathMinerLoader:
             ends.append(path_contexts.map(
                 lambda ctx_array: np.fromiter(map(lambda ctx: ctx.end_token, ctx_array), np.int32, count=ctx_array.size)
             ).values)
-
+            # labels也就是author_id
             labels.append(contexts['changeId'].map(
                 lambda change_id: change_entities.loc[change_id]
             ).values)
@@ -96,14 +105,14 @@ class PathMinerLoader:
                 time_buckets.append(contexts['changeId'].map(
                     lambda change_id: change_to_time_bucket[change_id]
                 ).values)
-
+            # context_indices存的是按depth组织的列表，每个列表都包含了第i个change的分配区域(train,test,ignore)
             if context_splits is not None:
                 for i in range(len(context_splits)):
-                    context_indices[i].append(contexts['changeId'].map(
+                    context_indices[i].append(contexts['changeId'].map( # 此时的contexts仅包含creation操作的change
                         lambda change_id: context_splits[i].change_to_pick_type[change_id]
                         if change_id in context_splits[i].change_to_pick_type else PickType.IGNORED
                     ))
-
+        # 把几个change_files的东西拼接起来
         starts = np.concatenate(starts)
         paths = np.concatenate(paths)
         ends = np.concatenate(ends)
@@ -114,6 +123,7 @@ class PathMinerLoader:
             context_indices = [np.concatenate(c) for c in context_indices]
 
         label_counts = np.array([author_occurrences[label] for label in labels])
+        # 🚩这一步又过滤了一遍没有资格的author
         indices = np.logical_and(min_max_count[0] <= label_counts, label_counts <= min_max_count[1])
         starts = starts[indices]
         paths = paths[indices]
@@ -122,8 +132,8 @@ class PathMinerLoader:
         if change_to_time_bucket is not None:
             time_buckets = time_buckets[indices]
         if context_splits is not None:
+            # 过滤掉没有资格的author
             context_indices = [c[indices] for c in context_indices]
-
         return labels, PathContexts(starts, paths, ends), time_buckets, context_indices
 
     @staticmethod

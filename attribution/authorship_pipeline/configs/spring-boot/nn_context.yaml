@@ -1,0 +1,9 @@
+batch_size: 1024
+classifier_type: nn
+epochs: 5
+hidden_dim: 32
+learning_rate: 0.01
+log_batches: 10
+mode: context
+seed: 239
+source_folder: ../gitminer/out/spring-boot

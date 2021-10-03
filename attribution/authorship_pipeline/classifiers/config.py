@@ -69,7 +69,7 @@ class Config:
     def min_max_count(self):
         min_count = self.__get('min_count')
         if min_count is None:
-            min_count = 0
+            min_count = 100
         max_count = self.__get('max_count')
         if max_count is None:
             max_count = 10 ** 9

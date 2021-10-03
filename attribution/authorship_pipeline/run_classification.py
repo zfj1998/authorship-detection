@@ -35,6 +35,7 @@ def main(args):
 
     config = Config.fromyaml(args.config_file)
 
+    print("begin to process folder")
     if config.mode() == 'snapshot':
         project_folder = ProcessedSnapshotFolder(config.source_folder())
         change_entities = None
@@ -44,6 +45,7 @@ def main(args):
         change_entities = resolve_entities(project_folder)
         author_occurrences, _, _, _ = compute_occurrences(project_folder)
 
+    print("begin to split dataset by time or context")
     if config.mode() == 'time':
         change_to_time_bucket = time_split(project_folder, config.time_folds(), uniform_distribution=True)
     else:
@@ -54,6 +56,7 @@ def main(args):
     else:
         context_splits = None
 
+    print('dataset split done! begin training!')
     if config.classifier_type() == 'nn':
         classifier = NNClassifier(config, project_folder, change_entities, change_to_time_bucket,
                                   config.min_max_count(), author_occurrences, context_splits)
@@ -93,4 +96,5 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(dest='config_file', type=str, help='Configuration file in YAML format')
     args = parser.parse_args()
+    print("arguments processed")
     main(args)
