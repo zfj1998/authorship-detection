@@ -18,7 +18,7 @@ class PathMinerLoader:
         self._tokens = self._load_tokens(project_folder.tokens_file)
         self._node_types = self._load_node_types(project_folder.node_types_file)
         self._paths = self._load_paths(project_folder.path_ids_file)
-        self._labels, self._path_contexts, self._time_buckets, self._context_indices = \
+        self._labels, self._path_contexts, self._time_buckets, self._context_indices, self._method_ids = \
             self._load_path_contexts_files(project_folder.file_changes, change_entities, change_to_time_bucket,
                                            min_max_count, context_splits, author_occurrences)
         self._n_classes = np.max(self._labels) + 1
@@ -64,7 +64,7 @@ class PathMinerLoader:
         context_splits: [(depth, {change_id: picktype}),...]
         author_occurrences: {auther_id: count_int} len: 433
         '''
-        starts, paths, ends = [], [], []
+        starts, paths, ends, method_ids = [], [], [], []
         labels = []
         time_buckets = []
         if context_splits is not None:
@@ -75,7 +75,7 @@ class PathMinerLoader:
 
         for path_contexts_file in path_contexts_files:
             contexts = pd.read_csv(path_contexts_file, sep=',',
-                                   usecols=['changeId', 'pathsCountBefore', 'pathsCountAfter', 'pathsAfter'])
+                                   usecols=['changeId', 'authorName', 'methodAfterId', 'pathsCountBefore', 'pathsCountAfter', 'pathsAfter'])
             # 🚩仅保留creation的change_id，这一步的筛选在其它文件中做过无数次了，唉
             contexts = contexts[np.logical_and(contexts['pathsCountBefore'] == 0, contexts['pathsCountAfter'] > 0)]
             # 把paths的";"分开，成为许多个path组成的列表
@@ -100,6 +100,8 @@ class PathMinerLoader:
             labels.append(contexts['changeId'].map(
                 lambda change_id: change_entities.loc[change_id]
             ).values)
+            method_ids.append([i for i in zip(contexts['changeId'], contexts['authorName'], contexts['methodAfterId'])])
+            # method_ids.append(contexts['methodAfterId'])
 
             if change_to_time_bucket is not None:
                 time_buckets.append(contexts['changeId'].map(
@@ -117,6 +119,7 @@ class PathMinerLoader:
         paths = np.concatenate(paths)
         ends = np.concatenate(ends)
         labels = np.concatenate(labels)
+        method_ids = np.concatenate(method_ids)
         if change_to_time_bucket is not None:
             time_buckets = np.concatenate(time_buckets)
         if context_splits is not None:
@@ -129,12 +132,13 @@ class PathMinerLoader:
         paths = paths[indices]
         ends = ends[indices]
         labels = labels[indices]
+        method_ids = method_ids[indices]
         if change_to_time_bucket is not None:
             time_buckets = time_buckets[indices]
         if context_splits is not None:
             # 过滤掉没有资格的author
             context_indices = [c[indices] for c in context_indices]
-        return labels, PathContexts(starts, paths, ends), time_buckets, context_indices
+        return labels, PathContexts(starts, paths, ends), time_buckets, context_indices, method_ids
 
     @staticmethod
     def _series_to_ndarray(series: pd.Series) -> np.ndarray:
@@ -169,3 +173,6 @@ class PathMinerLoader:
 
     def context_depth(self) -> int:
         return self._context_depth
+    
+    def method_ids(self) -> np.ndarray:
+        return self._method_ids

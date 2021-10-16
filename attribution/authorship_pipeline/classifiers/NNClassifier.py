@@ -28,6 +28,8 @@ class NNClassifier(BaseClassifier):
         """
         Define training and testing data loaders for a given testing fold.
         """
+        self._split_train_test(self._loader, fold_ind, pad=True)
+        return
         train_dataset, test_dataset = self._split_train_test(self._loader, fold_ind, pad=True)
         train_loader = DataLoader(train_dataset, self.config.batch_size(), shuffle=True)
         test_loader = DataLoader(test_dataset, self.config.batch_size())
@@ -142,9 +144,10 @@ class NNClassifier(BaseClassifier):
         scores = []
         for fold_ind in fold_indices:
             # print(fold_ind)
-            train_loader, test_loader = self.__sample_loaders(fold_ind)
-            scores.append(self.__run_classifier(train_loader, test_loader, fold_ind))
-            print(scores[-1])
+            self.__sample_loaders(fold_ind)
+            # train_loader, test_loader = self.__sample_loaders(fold_ind)
+            # scores.append(self.__run_classifier(train_loader, test_loader, fold_ind))
+            # print(scores[-1])
         print(scores)
         mean = float(np.mean([score.accuracy for score in scores]))
         std = float(np.std([score.accuracy for score in scores]))

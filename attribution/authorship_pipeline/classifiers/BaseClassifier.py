@@ -154,14 +154,14 @@ class BaseClassifier:
             train_indices = np.array(train_indices, dtype=np.int32)
             test_indices = np.array(test_indices, dtype=np.int32)
 
-        return self._create_datasets(loader, train_indices, test_indices, pad)
+        return self._create_datasets(loader, train_indices, test_indices, pad, fold_ind)
 
-    def _create_datasets(self, loader, train_indices, test_indices, pad) -> Tuple[PathMinerDataset, PathMinerDataset]:
+    def _create_datasets(self, loader, train_indices, test_indices, pad, fold_ind) -> Tuple[PathMinerDataset, PathMinerDataset]:
         """
         :return: datasets for training and testing
         """
-        return PathMinerDataset.from_loader(loader, train_indices, pad), \
-               PathMinerDataset.from_loader(loader, test_indices, pad)
+        return PathMinerDataset.from_loader(loader, train_indices, pad, fold_ind, 'train'), \
+               PathMinerDataset.from_loader(loader, test_indices, pad, fold_ind, 'test')
 
     def cross_validation_folds(self) -> List[int]:
         """

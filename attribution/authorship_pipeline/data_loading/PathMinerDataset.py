@@ -1,6 +1,7 @@
 from typing import Union, Tuple, List
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn.functional as F
 from torch.utils.data import Dataset
@@ -9,6 +10,7 @@ from data_loading.PathMinerLoader import PathMinerLoader
 from data_loading.PathMinerSnapshotLoader import PathMinerSnapshotLoader
 from data_loading.UtilityEntities import PathContexts, path_contexts_from_index
 
+import ipdb
 
 class PathMinerDataset(Dataset):
     """
@@ -29,10 +31,24 @@ class PathMinerDataset(Dataset):
             self._tokens, self._paths = path_contexts
 
     @classmethod
-    def from_loader(cls, loader: PathMinerLoader, indices: np.ndarray = None, should_pad: bool = True):
+    def from_loader(cls, loader: PathMinerLoader, indices: np.ndarray = None, should_pad: bool = True, fold_ind: int = 0, set: str = 'train'):
         """
         Prepares a dataset suitable for PbNN training.
         """
+        def dataset_export(indices, label: np.ndarray, method_ids: np.ndarray, depth: int, split: str):
+            # method_ids: [('changeId','authorName','methodAfterId')]
+
+            data_dict = {
+                'label': label[indices],
+                'change_id': method_ids[:, 0][indices],
+                'author_name': method_ids[:, 1][indices],
+                'method_id': method_ids[:, 2][indices],
+            }
+            df = pd.DataFrame(data_dict)
+            df.to_csv(f'parsed_result_{depth}_{split}.csv')
+            
+        dataset_export(indices, loader.labels(), loader.method_ids(), fold_ind, set)
+        return
         contexts, labels = (path_contexts_from_index(loader.path_contexts(), indices), loader.labels()[indices]) \
             if indices is not None \
             else (loader.path_contexts(), loader.labels())
