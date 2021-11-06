@@ -53,7 +53,7 @@ class MethodMapping(val before: MethodInfo?, val after: MethodInfo?) {
 }
 
 class DataDumper(val repoName: String) {
-    val dirName = "../gitminer/out/$repoName"
+    val dirName = "data/out/$repoName"
 
     fun dumpData(entries: List<ChangeEntry>, changes: List<FileChangeInfo>, pathStorage: PathStorage?, codeStorage: CodeStorage?) {
         println("Dumping data")

@@ -9,7 +9,7 @@ class TooLongException(file: String) : Exception(file)
 
 fun readAndParseBlob(blobId: BlobId?, repoName: String): TreeContext? {
     if (blobId == null) return null
-    val file = "../gitminer/data/exploded/$repoName/blobs/${blobId.id}"
+    val file = "data/exploded/$repoName/blobs/${blobId.id}"
     val length = File(file).readLines().size
     if (length > 3000) {
         throw TooLongException(file)

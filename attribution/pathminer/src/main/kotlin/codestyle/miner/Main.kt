@@ -11,7 +11,7 @@ import java.io.FileWriter
 import kotlin.concurrent.thread
 
 fun readRepoNames(): List<String> {
-    return File("../projects.txt").readLines().map { it.trim() }
+    return File("projects.txt").readLines().map { it.trim() }
 }
 
 enum class Mode {
@@ -131,7 +131,7 @@ fun processEntries(
 }
 
 fun processRepositoryData(repoName: String, mode: Mode) {
-    val blobListFile = "../gitminer/data/exploded/$repoName/infos_full.csv"
+    val blobListFile = "data/exploded/$repoName/infos_full.csv"
     val lines = Files.readLines(File(blobListFile), Charsets.UTF_8)
     val settings = CsvSettings(lines.first())
     println("${lines.size} entries read")
@@ -154,8 +154,8 @@ fun processRepositoryData(repoName: String, mode: Mode) {
     }
     val codeStorage = if (mode == Mode.ExtractCode || mode == Mode.ExtractAll) {
         CodeStorage(
-                "../gitminer/data/exploded/$repoName/blobs",
-                "../gitminer/out/$repoName/out_code"
+                "data/exploded/$repoName/blobs",
+                "data/out/$repoName/out_code"
         )
     } else {
         null
